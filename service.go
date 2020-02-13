@@ -4,8 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"./dao"
-	"./web"
+	"github.com/gfaraj/brewme.recipes.service/web"
 
 	"github.com/urfave/negroni"
 )
@@ -17,9 +16,7 @@ const (
 func main() {
 	router := web.NewRouter()
 
-	dao := dao.RecipeDaoMock{}
-
-	controller := web.NewRecipeController(&dao)
+	controller := InitializeRecipeController()
 	controller.SetupRoutes(router)
 
 	n := negroni.Classic()

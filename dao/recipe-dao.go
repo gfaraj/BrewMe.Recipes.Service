@@ -1,7 +1,7 @@
 package dao
 
 import (
-	"../model"
+	"github.com/gfaraj/brewme.recipes.service/model"
 )
 
 // RecipeDao represents an abstract data repository for recipes.
