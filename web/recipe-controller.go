@@ -43,8 +43,8 @@ func (c *RecipeController) GetRecipes(w http.ResponseWriter, r *http.Request) {
 
 // GetRecipe handles the /recipes/{recipeId} GET request.
 func (c *RecipeController) GetRecipe(w http.ResponseWriter, r *http.Request) {
-	recipeID := r.URL.Query().Get("id")
-	recipe, err := c.recipeDao.GetRecipe(recipeID)
+	id := getRequestParameter(r, "id")
+	recipe, err := c.recipeDao.GetRecipe(id)
 	if err != nil {
 		// TODO: log error
 		sendJSON(w, http.StatusInternalServerError, "Error while retrieving recipe")
@@ -58,20 +58,53 @@ func (c *RecipeController) GetRecipe(w http.ResponseWriter, r *http.Request) {
 func (c *RecipeController) CreateRecipe(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
 	recipe := &model.Recipe{}
-	json.NewDecoder(r.Body).Decode(recipe)
+	err := json.NewDecoder(r.Body).Decode(recipe)
+	if err != nil {
+		// TODO: log error
+		sendJSON(w, http.StatusBadRequest, "Could not decode recipe data")
+		return
+	}
 
-	c.recipeDao.UpsertRecipe(recipe)
+	err = c.recipeDao.UpsertRecipe(recipe)
+	if err != nil {
+		// TODO: log error
+		sendJSON(w, http.StatusInternalServerError, err.Error)
+		return
+	}
 	sendJSONOk(w, recipe)
 }
 
 // UpdateRecipe handles the /recipes PUT request.
 func (c *RecipeController) UpdateRecipe(w http.ResponseWriter, r *http.Request) {
+	defer r.Body.Close()
+	recipe := &model.Recipe{}
+	err := json.NewDecoder(r.Body).Decode(recipe)
+	if err != nil {
+		// TODO: log error
+		sendJSON(w, http.StatusBadRequest, "Could not decode recipe data")
+		return
+	}
 
+	err = c.recipeDao.UpsertRecipe(recipe)
+	if err != nil {
+		// TODO: log error
+		sendJSON(w, http.StatusInternalServerError, err.Error())
+		return
+	}
+	sendJSONOk(w, recipe)
 }
 
 // DeleteRecipe handles the /recipe/{recipeId} DELETE request.
 func (c *RecipeController) DeleteRecipe(w http.ResponseWriter, r *http.Request) {
+	id := getRequestParameter(r, "id")
+	err := c.recipeDao.DeleteRecipe(id)
+	if err != nil {
+		// TODO: log error
+		sendJSON(w, http.StatusInternalServerError, "Could not delete recipe: "+err.Error())
+		return
+	}
 
+	sendJSONOk(w, nil)
 }
 
 func sendJSON(w http.ResponseWriter, code int, data interface{}) {
@@ -88,4 +121,10 @@ func sendJSON(w http.ResponseWriter, code int, data interface{}) {
 
 func sendJSONOk(w http.ResponseWriter, data interface{}) {
 	sendJSON(w, http.StatusOK, data)
+}
+
+func getRequestParameter(r *http.Request, name string) string {
+	vars := mux.Vars(r)
+	value := vars[name]
+	return value
 }
