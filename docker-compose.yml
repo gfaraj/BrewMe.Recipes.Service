@@ -1,0 +1,8 @@
+version: '2.1'
+
+services:
+  brewme.recipes.service:
+    image: gfaraj/brewme.recipes.service:latest
+    build: .
+    ports:
+      - 3100:3100
